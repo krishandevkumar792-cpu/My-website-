@@ -3,176 +3,150 @@
 <head>
 <meta charset="UTF-8">
 <title>Krishnadev QR Code Generator</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 
 <style>
 body{
-    margin:0;
-    font-family:'Poppins', sans-serif;
-    min-height:100vh;
-    background:
-      linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6)),
-      url("https://images.unsplash.com/photo-1522202176988-66273c2fd55f");
-    background-size:cover;
-    background-position:center;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    color:#fff;
+  margin:0;
+  font-family:Poppins, sans-serif;
+  background:
+    linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),
+    url("https://images.unsplash.com/photo-1508780709619-79562169bc64");
+  background-size:cover;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
 }
 
-.card{
-    width:95%;
-    max-width:420px;
-    background:rgba(255,255,255,0.08);
-    backdrop-filter:blur(12px);
-    border-radius:22px;
-    padding:25px;
-    box-shadow:0 30px 80px rgba(0,0,0,0.7);
-    text-align:center;
+.app{
+  width:95%;
+  max-width:420px;
+  background:rgba(255,255,255,.08);
+  backdrop-filter:blur(14px);
+  border-radius:22px;
+  padding:24px;
+  box-shadow:0 30px 80px rgba(0,0,0,.7);
+  text-align:center;
 }
 
 h1{
-    margin:5px 0;
-    font-size:24px;
+  font-size:22px;
+  margin-bottom:5px;
 }
 
-input[type="text"], input[type="file"]{
-    width:100%;
-    padding:12px;
-    margin:10px 0;
-    border-radius:10px;
-    border:none;
-    outline:none;
-    font-size:14px;
+.tagline{
+  font-size:13px;
+  opacity:.85;
+  margin-bottom:15px;
+}
+
+input, button{
+  width:100%;
+  padding:13px;
+  border-radius:10px;
+  border:none;
+  margin:8px 0;
+  font-size:14px;
 }
 
 button{
-    width:100%;
-    padding:14px;
-    border:none;
-    border-radius:10px;
-    background:linear-gradient(45deg,#00ffd5,#00a8ff);
-    font-size:16px;
-    font-weight:600;
-    cursor:pointer;
+  background:linear-gradient(45deg,#00ffd5,#00a8ff);
+  font-weight:600;
+  cursor:pointer;
 }
 
-button:hover{
-    transform:scale(1.03);
-}
-
-#qr-wrapper{
-    margin:20px auto;
-    background:#fff;
-    padding:15px;
-    border-radius:14px;
-    display:inline-block;
+canvas{
+  background:#fff;
+  padding:12px;
+  border-radius:14px;
+  margin-top:15px;
 }
 
 .download{
-    margin-top:10px;
-    background:linear-gradient(45deg,#7CFF00,#2ecc71);
-    display:none;
+  display:none;
+  background:linear-gradient(45deg,#2ecc71,#7CFF00);
 }
 
-footer{
-    font-size:12px;
-    opacity:0.7;
-    margin-top:12px;
+.features{
+  margin-top:15px;
+  font-size:11px;
+  opacity:.7;
 }
 </style>
 </head>
 
 <body>
 
-<div class="card">
-    <h1>Krishnadev QR Code Generator</h1>
+<div class="app">
+  <h1>Krishnadev QR Code Generator</h1>
+  <div class="tagline">Professional • Secure • Future-Ready</div>
 
-    <input type="text" id="text" placeholder="Text या URL डालें">
+  <input id="qrText" placeholder="Text / URL लिखें">
+  <input type="file" id="logoInput" accept="image/*">
 
-    <input type="file" id="logoInput" accept="image/*">
+  <button onclick="makeQR()">Generate QR</button>
 
-    <button onclick="generateQR()">Generate QR</button>
+  <canvas id="qrCanvas" width="260" height="260"></canvas>
 
-    <div id="qr-wrapper">
-        <div id="qrcode"></div>
-    </div>
+  <button class="download" id="downloadBtn" onclick="downloadQR()">
+    Download QR Code
+  </button>
 
-    <button class="download" id="downloadBtn" onclick="downloadQR()">Download QR Code</button>
-
-    <footer>Future Ready • Payment • AI • Analytics</footer>
+  <div class="features">
+    🔒 Login • 💳 Payments • 📊 Analytics • 🤖 AI (Coming Soon)
+  </div>
 </div>
 
 <script>
-let qr;
-let logoImage = null;
+const canvas = document.getElementById("qrCanvas");
+const ctx = canvas.getContext("2d");
+let logoImg = null;
 
 document.getElementById("logoInput").addEventListener("change", e=>{
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = () => logoImage = reader.result;
-    reader.readAsDataURL(file);
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=> {
+    logoImg = new Image();
+    logoImg.src = reader.result;
+  }
+  reader.readAsDataURL(file);
 });
 
-function generateQR(){
-    const text = document.getElementById("text").value;
-    if(text.trim()===""){
-        alert("Text या URL डालो");
-        return;
+function makeQR(){
+  const text = document.getElementById("qrText").value.trim();
+  if(!text){ alert("Text / URL डालो"); return; }
+
+  QRCode.toCanvas(canvas, text, { width:260, margin:2 }, err=>{
+    if(err) return;
+
+    if(logoImg){
+      logoImg.onload = ()=>{
+        const size = 60;
+        ctx.drawImage(
+          logoImg,
+          (canvas.width-size)/2,
+          (canvas.height-size)/2,
+          size,size
+        );
+      }
     }
 
-    document.getElementById("qrcode").innerHTML="";
-
-    qr = new QRCode("qrcode",{
-        text:text,
-        width:230,
-        height:230,
-        correctLevel:QRCode.CorrectLevel.H
-    });
-
-    setTimeout(()=>{
-        if(logoImage){
-            const qrImg = document.querySelector("#qrcode img");
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-
-            canvas.width = qrImg.width;
-            canvas.height = qrImg.height;
-
-            const img = new Image();
-            img.onload = ()=>{
-                ctx.drawImage(img,0,0);
-                const logo = new Image();
-                logo.onload = ()=>{
-                    const size = canvas.width/4;
-                    ctx.drawImage(
-                        logo,
-                        (canvas.width-size)/2,
-                        (canvas.height-size)/2,
-                        size,size
-                    );
-                    qrImg.src = canvas.toDataURL();
-                }
-                logo.src = logoImage;
-            }
-            img.src = qrImg.src;
-        }
-    },300);
-
     document.getElementById("downloadBtn").style.display="block";
+  });
 }
 
 function downloadQR(){
-    const img = document.querySelector("#qrcode img");
-    const a = document.createElement("a");
-    a.href = img.src;
-    a.download = "krishnadev-qr.png";
-    a.click();
+  const link = document.createElement("a");
+  link.download = "krishnadev-qr.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
 }
 </script>
 
