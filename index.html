@@ -79,13 +79,22 @@ input#text{
 }
 input#text:focus{ border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
 
-.colors{display:flex;gap:10px;margin-top:15px;}
+.colors{display:flex;gap:10px;margin-top:15px; position: relative;}
 .colors button{
     flex:1;padding:12px;border-radius:10px;border:none;
     background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;font-weight:600;
     transition: 0.2s;
 }
 .colors button:hover{ background:rgba(255,255,255,0.2); }
+
+/* Hidden Color Inputs Styling */
+.hidden-picker {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
 
 .range-area { margin-top: 20px; }
 .range-area label{font-size:12px; display:block; margin-bottom:10px; opacity:0.7;}
@@ -104,14 +113,11 @@ input[type="range"]::-webkit-slider-thumb {
 #qrWrap{
     display:none; margin-top:25px; padding:0; 
     background:transparent; text-align: center;
-    /* CSS shadow only, shape comes from canvas now */
     filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
 }
 
 canvas#qr{ 
     max-width:100% !important; height:auto !important; 
-    /* Canvas khud hi round draw karega, toh CSS border radius ki zaroorat nahi hai 
-       lekin safayi ke liye rakh sakte hain */
 }
 
 .mainBtn{
@@ -146,8 +152,11 @@ canvas#qr{
     <input id="text" placeholder="Enter Text or URL">
 
     <div class="colors">
-        <button onclick="pick('p')">Primary</button>
-        <button onclick="pick('s')">Secondary</button>
+        <input type="color" id="pickerPrimary" class="hidden-picker" value="#38bdf8">
+        <input type="color" id="pickerSecondary" class="hidden-picker" value="#6366f1">
+
+        <button onclick="openPicker('p')">Primary</button>
+        <button onclick="openPicker('s')">Secondary</button>
     </div>
 
     <div class="range-area">
@@ -168,9 +177,28 @@ canvas#qr{
 </div>
 
 <script>
+// Initial Defaults matching the HTML values
 let primary = "#38bdf8";
 let secondary = "#6366f1";
 let generated = false;
+
+// Initialize inputs with default colors
+const pickerP = document.getElementById('pickerPrimary');
+const pickerS = document.getElementById('pickerSecondary');
+
+// --- Event Listeners for Color Changes ---
+// This ensures the color update logic runs whenever the input changes
+pickerP.addEventListener('input', (e) => {
+    primary = e.target.value;
+    updateSliderTrack();
+    if(generated) drawQR();
+});
+
+pickerS.addEventListener('input', (e) => {
+    secondary = e.target.value;
+    updateSliderTrack();
+    if(generated) drawQR();
+});
 
 function updateSliderTrack() {
     const slider = document.getElementById('mixSlider');
@@ -178,17 +206,13 @@ function updateSliderTrack() {
 }
 updateSliderTrack();
 
-function pick(t) {
-    let i = document.createElement("input");
-    i.type = "color";
-    i.value = (t === 'p') ? primary : secondary;
-    i.oninput = e => {
-        if(t === 'p') primary = e.target.value;
-        else secondary = e.target.value;
-        updateSliderTrack();
-        if(generated) drawQR();
-    };
-    i.click();
+// FIXED FUNCTION: Instead of creating a new input, click the existing hidden one
+function openPicker(type) {
+    if (type === 'p') {
+        pickerP.click();
+    } else {
+        pickerS.click();
+    }
 }
 
 function handleUpdate() {
@@ -204,7 +228,6 @@ async function generate() {
     await drawQR();
 }
 
-// 1. Helper Function: Round Rectangle Path banata hai
 function roundedRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
@@ -224,7 +247,6 @@ async function drawQR() {
     const canvas = document.getElementById("qr");
     const ctx = canvas.getContext("2d");
 
-    // Step A: Gradient QR ko alag temporary canvas pe banao
     const qrCanvas = document.createElement('canvas');
     const qrCtx = qrCanvas.getContext("2d");
 
@@ -235,39 +257,29 @@ async function drawQR() {
             color: { dark: "#000000", light: "#00000000" }
         });
 
-        // Gradient Colors apply karo
         const mix = document.getElementById("mixSlider").value / 100;
         const grd = qrCtx.createLinearGradient(0, 0, qrCanvas.width, qrCanvas.height);
         grd.addColorStop(0, primary);
         grd.addColorStop(mix, secondary);
         grd.addColorStop(1, secondary);
 
-        // Sirf QR code ke upar color chadhao
         qrCtx.globalCompositeOperation = 'source-in';
         qrCtx.fillStyle = grd;
         qrCtx.fillRect(0, 0, qrCanvas.width, qrCanvas.height);
         
-        // --- Step B: Main Canvas ko set karo (White Round Card) ---
         canvas.width = qrCanvas.width;
         canvas.height = qrCanvas.height;
         
-        // 1. Clear screen
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 2. Round Shape kaat kar White bharna
-        // Yeh wahi same logic hai jo download me use hoti hai
-        const radius = 80; // Corner roundness
+        const radius = 80;
         roundedRect(ctx, 0, 0, canvas.width, canvas.height, radius);
-        ctx.clip(); // Canvas ko kaat diya
+        ctx.clip(); 
 
-        ctx.fillStyle = "#FFFFFF"; // Safed rang
+        ctx.fillStyle = "#FFFFFF"; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 3. Ab uske upar Gradient QR chipka do
         ctx.drawImage(qrCanvas, 0, 0);
-
-        // Note: Kyunki humne 'clip()' use kiya hai, 
-        // canvas ke corner transparent rahenge screen par bhi.
 
     } catch (err) {
         console.error(err);
@@ -276,8 +288,6 @@ async function drawQR() {
 
 function downloadPNG() {
     const canvas = document.getElementById("qr");
-    // Kyunki ab canvas screen par hi round aur white hai,
-    // hum seedha ussi ka data download kar sakte hain.
     const imgData = canvas.toDataURL("image/png");
     
     const link = document.createElement('a');
