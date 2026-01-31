@@ -2,151 +2,309 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Krishnadev QR Code Generator</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+<title>KR QR Studio Pro - Final View</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
 
 <style>
+/* --- Core Styles --- */
+*{box-sizing:border-box;font-family:system-ui}
 body{
-  margin:0;
-  font-family:Poppins, sans-serif;
-  background:
-    linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),
-    url("https://images.unsplash.com/photo-1508780709619-79562169bc64");
-  background-size:cover;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
+    margin:0; min-height:100vh;
+    display:flex; justify-content:center; align-items:center;
+    background:#020617; color:#fff;
 }
 
 .app{
-  width:95%;
-  max-width:420px;
-  background:rgba(255,255,255,.08);
-  backdrop-filter:blur(14px);
-  border-radius:22px;
-  padding:24px;
-  box-shadow:0 30px 80px rgba(0,0,0,.7);
-  text-align:center;
+    width:360px; padding:24px; border-radius:28px;
+    background:rgba(255,255,255,.05); backdrop-filter:blur(20px);
+    box-shadow:0 30px 60px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+    z-index: 1;
 }
 
-h1{
-  font-size:22px;
-  margin-bottom:5px;
+/* --- LOGO STYLES --- */
+.logo-container {
+    position: relative;
+    width: 80px; height: 80px; margin: auto;
+    animation: float 3s ease-in-out infinite;
 }
 
-.tagline{
-  font-size:13px;
-  opacity:.85;
-  margin-bottom:15px;
+.logo-glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%; height: 100%;
+    background: inherit;
+    border-radius: 50%;
+    box-shadow: 0 0 60px 20px rgba(56, 189, 248, 0.4);
+    z-index: -1;
+    opacity: 0.8;
 }
 
-input, button{
-  width:100%;
-  padding:13px;
-  border-radius:10px;
-  border:none;
-  margin:8px 0;
-  font-size:14px;
+.logo {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #38bdf8, #6366f1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; font-weight: 800;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.2);
 }
 
-button{
-  background:linear-gradient(45deg,#00ffd5,#00a8ff);
-  font-weight:600;
-  cursor:pointer;
+.logo::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -150%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    transform: skewX(-20deg);
+    animation: shine 3s infinite;
 }
 
-canvas{
-  background:#fff;
-  padding:12px;
-  border-radius:14px;
-  margin-top:15px;
+@keyframes float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+@keyframes shine{ 0% { left: -150%; } 20% { left: 150%; } 100% { left: 150%; } }
+
+h2{text-align:center;margin:20px 0 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
+p.tagline{text-align:center;font-size:12px;opacity:0.6;margin-bottom:25px;}
+
+input#text{
+    width:100%;padding:14px;border-radius:12px;
+    border:1px solid rgba(255,255,255,0.1);
+    background:#000;color:#fff;font-size:15px;outline:none;
+    transition: 0.3s;
+}
+input#text:focus{ border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
+
+.colors{display:flex;gap:10px;margin-top:15px;}
+.colors button{
+    flex:1;padding:12px;border-radius:10px;border:none;
+    background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;font-weight:600;
+    transition: 0.2s;
+}
+.colors button:hover{ background:rgba(255,255,255,0.2); }
+
+.range-area { margin-top: 20px; }
+.range-area label{font-size:12px; display:block; margin-bottom:10px; opacity:0.7;}
+
+input[type="range"] {
+    -webkit-appearance: none; width: 100%; height: 8px;
+    border-radius: 5px; outline: none; margin-bottom: 5px;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px;
+    border-radius: 50%; background: #fff; cursor: pointer;
+    border: 2px solid #38bdf8;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
-.download{
-  display:none;
-  background:linear-gradient(45deg,#2ecc71,#7CFF00);
+#qrWrap{
+    display:none; margin-top:25px; padding:0; 
+    background:transparent; text-align: center;
+    /* CSS shadow only, shape comes from canvas now */
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
 }
 
-.features{
-  margin-top:15px;
-  font-size:11px;
-  opacity:.7;
+canvas#qr{ 
+    max-width:100% !important; height:auto !important; 
+    /* Canvas khud hi round draw karega, toh CSS border radius ki zaroorat nahi hai 
+       lekin safayi ke liye rakh sakte hain */
 }
+
+.mainBtn{
+    margin-top:25px; width:100%; padding:15px; border-radius:14px;
+    border:none; background:linear-gradient(135deg,#38bdf8,#6366f1);
+    color:#fff; font-size:16px; font-weight:700; cursor:pointer;
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+    transition: transform 0.2s;
+}
+.mainBtn:active{ transform: scale(0.98); }
+
+.actions{ display:none; flex-direction:column; gap:10px; margin-top:20px; }
+.actions button{
+    width:100%; padding:12px; border-radius:10px; border:none;
+    color:#fff; font-weight:600; cursor:pointer;
+}
+.btn-png{background:#22c55e;}
+.btn-svg{background:#6366f1;}
 </style>
 </head>
-
 <body>
 
 <div class="app">
-  <h1>Krishnadev QR Code Generator</h1>
-  <div class="tagline">Professional • Secure • Future-Ready</div>
+    <div class="logo-container">
+        <div class="logo-glow"></div>
+        <div class="logo">KR</div>
+    </div>
+    
+    <h2>QR Color Studio</h2>
+    <p class="tagline">Glow Logo • Rounded Card View</p>
 
-  <input id="qrText" placeholder="Text / URL लिखें">
-  <input type="file" id="logoInput" accept="image/*">
+    <input id="text" placeholder="Enter Text or URL">
 
-  <button onclick="makeQR()">Generate QR</button>
+    <div class="colors">
+        <button onclick="pick('p')">Primary</button>
+        <button onclick="pick('s')">Secondary</button>
+    </div>
 
-  <canvas id="qrCanvas" width="260" height="260"></canvas>
+    <div class="range-area">
+        <label>Gradient Mixing</label>
+        <input type="range" id="mixSlider" min="0" max="100" value="50" oninput="handleUpdate()">
+    </div>
 
-  <button class="download" id="downloadBtn" onclick="downloadQR()">
-    Download QR Code
-  </button>
+    <button class="mainBtn" onclick="generate()">Generate Rounded QR</button>
 
-  <div class="features">
-    🔒 Login • 💳 Payments • 📊 Analytics • 🤖 AI (Coming Soon)
-  </div>
+    <div id="qrWrap">
+        <canvas id="qr"></canvas>
+    </div>
+
+    <div id="actionArea" class="actions">
+        <button class="btn-png" onclick="downloadPNG()">Download PNG</button>
+        <button class="btn-svg" onclick="downloadSVG()">Download SVG</button>
+    </div>
 </div>
 
 <script>
-const canvas = document.getElementById("qrCanvas");
-const ctx = canvas.getContext("2d");
-let logoImg = null;
+let primary = "#38bdf8";
+let secondary = "#6366f1";
+let generated = false;
 
-document.getElementById("logoInput").addEventListener("change", e=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=> {
-    logoImg = new Image();
-    logoImg.src = reader.result;
-  }
-  reader.readAsDataURL(file);
-});
+function updateSliderTrack() {
+    const slider = document.getElementById('mixSlider');
+    slider.style.background = `linear-gradient(90deg, ${primary}, ${secondary})`;
+}
+updateSliderTrack();
 
-function makeQR(){
-  const text = document.getElementById("qrText").value.trim();
-  if(!text){ alert("Text / URL डालो"); return; }
-
-  QRCode.toCanvas(canvas, text, { width:260, margin:2 }, err=>{
-    if(err) return;
-
-    if(logoImg){
-      logoImg.onload = ()=>{
-        const size = 60;
-        ctx.drawImage(
-          logoImg,
-          (canvas.width-size)/2,
-          (canvas.height-size)/2,
-          size,size
-        );
-      }
-    }
-
-    document.getElementById("downloadBtn").style.display="block";
-  });
+function pick(t) {
+    let i = document.createElement("input");
+    i.type = "color";
+    i.value = (t === 'p') ? primary : secondary;
+    i.oninput = e => {
+        if(t === 'p') primary = e.target.value;
+        else secondary = e.target.value;
+        updateSliderTrack();
+        if(generated) drawQR();
+    };
+    i.click();
 }
 
-function downloadQR(){
-  const link = document.createElement("a");
-  link.download = "krishnadev-qr.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+function handleUpdate() {
+    if(generated) drawQR();
+}
+
+async function generate() {
+    let val = document.getElementById("text").value.trim();
+    if(!val) { alert("Please enter text first!"); return; }
+    generated = true;
+    document.getElementById("qrWrap").style.display = "block";
+    document.getElementById("actionArea").style.display = "flex";
+    await drawQR();
+}
+
+// 1. Helper Function: Round Rectangle Path banata hai
+function roundedRect(ctx, x, y, width, height, radius) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+}
+
+async function drawQR() {
+    let val = document.getElementById("text").value.trim();
+    const canvas = document.getElementById("qr");
+    const ctx = canvas.getContext("2d");
+
+    // Step A: Gradient QR ko alag temporary canvas pe banao
+    const qrCanvas = document.createElement('canvas');
+    const qrCtx = qrCanvas.getContext("2d");
+
+    try {
+        await QRCode.toCanvas(qrCanvas, val, { 
+            width: 800, 
+            margin: 2,
+            color: { dark: "#000000", light: "#00000000" }
+        });
+
+        // Gradient Colors apply karo
+        const mix = document.getElementById("mixSlider").value / 100;
+        const grd = qrCtx.createLinearGradient(0, 0, qrCanvas.width, qrCanvas.height);
+        grd.addColorStop(0, primary);
+        grd.addColorStop(mix, secondary);
+        grd.addColorStop(1, secondary);
+
+        // Sirf QR code ke upar color chadhao
+        qrCtx.globalCompositeOperation = 'source-in';
+        qrCtx.fillStyle = grd;
+        qrCtx.fillRect(0, 0, qrCanvas.width, qrCanvas.height);
+        
+        // --- Step B: Main Canvas ko set karo (White Round Card) ---
+        canvas.width = qrCanvas.width;
+        canvas.height = qrCanvas.height;
+        
+        // 1. Clear screen
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 2. Round Shape kaat kar White bharna
+        // Yeh wahi same logic hai jo download me use hoti hai
+        const radius = 80; // Corner roundness
+        roundedRect(ctx, 0, 0, canvas.width, canvas.height, radius);
+        ctx.clip(); // Canvas ko kaat diya
+
+        ctx.fillStyle = "#FFFFFF"; // Safed rang
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 3. Ab uske upar Gradient QR chipka do
+        ctx.drawImage(qrCanvas, 0, 0);
+
+        // Note: Kyunki humne 'clip()' use kiya hai, 
+        // canvas ke corner transparent rahenge screen par bhi.
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function downloadPNG() {
+    const canvas = document.getElementById("qr");
+    // Kyunki ab canvas screen par hi round aur white hai,
+    // hum seedha ussi ka data download kar sakte hain.
+    const imgData = canvas.toDataURL("image/png");
+    
+    const link = document.createElement('a');
+    link.download = 'KR-Rounded-QR.png';
+    link.href = imgData;
+    link.click();
+}
+
+function downloadSVG() {
+    const canvas = document.getElementById("qr");
+    const imgData = canvas.toDataURL("image/png");
+    
+    const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}">
+        <image href="${imgData}" width="100%" height="100%" x="0" y="0"/>
+    </svg>`;
+    
+    const blob = new Blob([svg], {type: 'image/svg+xml;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'KR-Rounded-QR.svg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
 </script>
 
