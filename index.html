@@ -1,177 +1,255 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-    <link rel="icon" type="image/png" href="android-chrome-512x512.png">
-<title>KR QR Studio Pro</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
+    <meta charset="UTF-8">
+    <title>SwiftCode QR Generator</title>
+    <script src="qrcode.min.js"></script>
 
-<style>
-/* --- Core Styles --- */
-*{box-sizing:border-box;font-family:system-ui}
-body{
-    margin:0; min-height:100vh;
-    display:flex; justify-content:center; align-items:center;
-    background:#020617; color:#fff;
-}
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-app-pub-5947768435550039" crossorigin="anonymous"></script>
 
-.app{
-    width:360px; padding:24px; border-radius:28px;
-    background:rgba(255,255,255,.05); backdrop-filter:blur(20px);
-    box-shadow:0 30px 60px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255,255,255,0.1);
-    position: relative;
-    z-index: 1;
-}
+    <style>
+        /* --- Core Styles --- */
+        *{
+            box-sizing: border-box;
+            font-family: system-ui;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
 
-/* --- LOGO STYLES --- */
-.logo-container {
-    position: relative;
-    width: 80px; height: 80px; margin: auto;
-    animation: float 3s ease-in-out infinite;
-}
+        input {
+            -webkit-user-select: auto;
+            user-select: auto;
+        }
 
-.logo-glow {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%; height: 100%;
-    background: inherit;
-    border-radius: 50%;
-    box-shadow: 0 0 60px 20px rgba(56, 189, 248, 0.4);
-    z-index: -1;
-    opacity: 0.8;
-}
+        body{
+            margin:0; min-height:100vh;
+            display:flex; flex-direction: column; justify-content:center; align-items:center;
+            background:#020617; color:#fff;
+            position: relative;
+            overflow-x: hidden;
+            gap: 20px;
+            padding: 20px 0;
+        }
 
-.logo {
-    width: 100%; height: 100%;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #38bdf8, #6366f1);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 28px; font-weight: 800;
-    color: white;
-    position: relative;
-    overflow: hidden;
-    border: 2px solid rgba(255,255,255,0.2);
-}
+        .app{
+            width:360px; padding:24px; border-radius:28px;
+            background:rgba(255,255,255,.05); backdrop-filter:blur(20px);
+            box-shadow:0 30px 60px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            z-index: 1;
+        }
 
-.logo::after {
-    content: '';
-    position: absolute;
-    top: 0; left: -150%;
-    width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-    transform: skewX(-20deg);
-    animation: shine 3s infinite;
-}
+        /* --- HAMBURGER MENU STYLES --- */
+        .menu-icon {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .menu-icon span {
+            display: block; width: 25px; height: 3px; background-color: #fff;
+            border-radius: 2px; transition: 0.3s;
+        }
+        .menu-icon:hover span { background-color: #38bdf8; }
 
-@keyframes float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-@keyframes shine{ 0% { left: -150%; } 20% { left: 150%; } 100% { left: 150%; } }
+        /* --- SIDEBAR DRAWER --- */
+        .sidebar {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+            background: #090d16; box-shadow: 5px 0 20px rgba(0,0,0,0.7);
+            z-index: 100; transition: 0.3s ease; padding: 80px 20px 20px 20px;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar.open { left: 0; }
+        .sidebar .close-btn {
+            position: absolute; top: 20px; right: 20px; font-size: 24px; cursor: pointer; color: #fff;
+        }
+        .sidebar .close-btn:hover { color: #ef4444; }
+        .menu-item {
+            padding: 14px; border-radius: 10px; background: rgba(255,255,255,0.03);
+            margin-bottom: 10px; cursor: pointer; font-weight: 600; transition: 0.2s;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .menu-item:hover { background: rgba(56, 189, 248, 0.1); border-color: #38bdf8; color: #38bdf8; }
 
-h2{text-align:center;margin:20px 0 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
-p.tagline{text-align:center;font-size:12px;opacity:0.6;margin-bottom:25px;}
+        /* --- PRIVACY POLICY OVERLAY (नया X बटन वाला पॉप-अप) --- */
+        .privacy-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #f8fafc;
+            z-index: 1000;
+            display: none; /* डिफ़ॉल्ट रूप से छिपा रहेगा */
+            flex-direction: column;
+        }
+        .privacy-header {
+            background: #0f172a;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .privacy-header h3 {
+            margin: 0; color: #fff; font-size: 18px; font-weight: 600;
+        }
+        .close-privacy-btn {
+            background: #ef4444; color: #fff;
+            border: none; width: 34px; height: 34px;
+            border-radius: 8px; font-weight: bold; font-size: 18px;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            transition: 0.2s;
+        }
+        .close-privacy-btn:hover { background: #dc2626; }
+        .privacy-iframe {
+            width: 100%; flex: 1; border: none; background: #fff;
+        }
 
-input#text{
-    width:100%;padding:14px;border-radius:12px;
-    border:1px solid rgba(255,255,255,0.1);
-    background:#000;color:#fff;font-size:15px;outline:none;
-    transition: 0.3s;
-}
-input#text:focus{ border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
+        /* --- LOGO STYLES --- */
+        .logo-container {
+            position: relative; width: 80px; height: 80px; margin: auto;
+            animation: float 3s ease-in-out infinite;
+        }
+        .logo-glow {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 100%; height: 100%; background: inherit; border-radius: 50%;
+            box-shadow: 0 0 60px 20px rgba(56, 189, 248, 0.4); z-index: -1; opacity: 0.8;
+        }
+        .logo {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: linear-gradient(135deg, #38bdf8, #6366f1);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: 800; color: white; position: relative;
+            overflow: hidden; border: 2px solid rgba(255,255,255,0.2);
+        }
+        .logo::after {
+            content: ''; position: absolute; top: 0; left: -150%;
+            width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            transform: skewX(-20deg); animation: shine 3s infinite;
+        }
+        @keyframes float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+        @keyframes shine{ 0% { left: -150%; } 20% { left: 150%; } 100% { left: 150%; } }
 
-.colors{display:flex;gap:10px;margin-top:15px; position: relative;}
-.colors button{
-    flex:1;padding:12px;border-radius:10px;border:none;
-    background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;font-weight:600;
-    transition: 0.2s;
-}
-.colors button:hover{ background:rgba(255,255,255,0.2); }
+        h2{text-align:center;margin:20px 0 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
+        p.tagline{text-align:center;font-size:12px;opacity:0.6;margin-bottom:25px;}
 
-/* Hidden Color Inputs Styling */
-.hidden-picker {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-    pointer-events: none;
-}
+        input[type="text"]{
+            width:100%;padding:14px;border-radius:12px;
+            border:1px solid rgba(255,255,255,0.1);
+            background:#000;color:#fff;font-size:15px;outline:none;
+            transition: 0.3s; margin-bottom: 15px;
+        }
+        input[type="text"]:focus{ border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
 
-.range-area { margin-top: 20px; }
-.range-area label{font-size:12px; display:block; margin-bottom:10px; opacity:0.7;}
+        .colors{display:flex;gap:10px; position: relative;}
+        .colors button{
+            flex:1;padding:12px;border-radius:10px;border:none;
+            background:rgba(255,255,255,0.1);color:#fff;cursor:pointer;font-weight:600;
+            transition: 0.2s;
+        }
+        .colors button:hover{ background:rgba(255,255,255,0.2); }
+        .hidden-picker { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
 
-input[type="range"] {
-    -webkit-appearance: none; width: 100%; height: 8px;
-    border-radius: 5px; outline: none; margin-bottom: 5px;
-}
-input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 18px; height: 18px;
-    border-radius: 50%; background: #fff; cursor: pointer;
-    border: 2px solid #38bdf8;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
+        .range-area { margin-top: 20px; }
+        .range-area label{font-size:12px; display:block; margin-bottom:10px; opacity:0.7;}
 
-#qrWrap{
-    display:none; margin-top:25px; padding:0; 
-    background:transparent; text-align: center;
-    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
-}
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none; width: 100%; height: 8px;
+            border-radius: 5px; outline: none; margin-bottom: 5px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
+            border-radius: 50%; background: #fff; cursor: pointer; border: 2px solid #38bdf8;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
 
-canvas#qr{ 
-    max-width:100% !important; height:auto !important; 
-}
+        .custom-options {
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px;
+            margin-top: 15px; border: 1px solid rgba(255,255,255,0.05);
+        }
 
-.mainBtn{
-    margin-top:25px; width:100%; padding:15px; border-radius:14px;
-    border:none; background:linear-gradient(135deg,#38bdf8,#6366f1);
-    color:#fff; font-size:16px; font-weight:700; cursor:pointer;
-    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-    transition: transform 0.2s;
-}
-.mainBtn:active{ transform: scale(0.98); }
+        #qrWrap{
+            display:none; margin-top:25px; padding:0;
+            background:transparent; text-align: center;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+        }
+        canvas#qr{ max-width:100% !important; height:auto !important; }
 
-.actions{ display:none; flex-direction:column; gap:10px; margin-top:20px; }
-.actions button{
-    width:100%; padding:12px; border-radius:10px; border:none;
-    color:#fff; font-weight:600; cursor:pointer;
-}
-.btn-png{background:#22c55e;}
-.btn-svg{background:#6366f1;}
-</style>
-<meta 
-    name="google-site-verification"
-    content="cGgGwAo0zwXqRFgqGRO9Qvo6MKjxt6SCgEVQWpcODjQ" />
-    <meta name="keywords" 
-        content="free QR code generator, custom QR codes, QR code with logo, Wi-Fi QR code, vCard QR code" />
-    
+        .mainBtn{
+            margin-top:20px; width:100%; padding:15px; border-radius:14px;
+            border:none; background:linear-gradient(135deg,#38bdf8,#6366f1);
+            color:#fff; font-size:16px; font-weight:700; cursor:pointer;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); transition: transform 0.2s;
+        }
+        .mainBtn:active{ transform: scale(0.98); }
+
+        .actions{ display:none; flex-direction:column; gap:10px; margin-top:20px; }
+        .actions button{
+            width:100%; padding:12px; border-radius:10px; border:none;
+            color:#fff; font-weight:600; cursor:pointer; background:#22c55e;
+        }
+
+        .ad-container { width: 100%; max-width: 360px; margin-top: 15px; text-align: center; z-index: 1; }
+    </style>
 </head>
 <body>
 
-<div class="app">
-    <div class="logo-container">
-        <div class="logo-glow"></div>
-        <div class="logo">KR</div>
+<div class="privacy-overlay" id="privacyOverlay">
+    <div class="privacy-header">
+        <h3>Privacy Policy</h3>
+        <button class="close-privacy-btn" onclick="closePrivacyPolicy()">✕</button>
     </div>
-    
-    <h2>QR Color Studio</h2>
-    <p class="tagline">Glow Logo • Rounded Card View</p>
+    <iframe class="privacy-iframe" src="https://krishandevkumar792-cpu.github.io/Privacy-Policy/"></iframe>
+</div>
 
-    <input id="text" placeholder="Enter Text or URL">
+<div class="sidebar" id="sidebarMenu">
+    <div class="close-btn" onclick="toggleSidebar()">&times;</div>
+    <div class="menu-item" onclick="openPrivacyPolicyLink()">Privacy Policy</div>
+</div>
+
+<div class="app">
+    <div class="menu-icon" onclick="toggleSidebar()">
+        <span></span><span></span><span></span>
+    </div>
+
+    <div class="logo-container" style="margin-top: 20px;">
+        <div class="logo-glow"></div>
+        <div class="logo">SC</div>
+    </div>
+
+    <h2>SwiftCode QR Generator</h2>
+    <p class="tagline">Premium photo-like design</p>
+
+    <input type="text" id="text" placeholder="Enter text or URL">
 
     <div class="colors">
         <input type="color" id="pickerPrimary" class="hidden-picker" value="#38bdf8">
         <input type="color" id="pickerSecondary" class="hidden-picker" value="#6366f1">
-
-        <button onclick="openPicker('p')">Primary</button>
-        <button onclick="openPicker('s')">Secondary</button>
+        <button onclick="openPicker('p')">Primary colour</button>
+        <button onclick="openPicker('s')">Secondary colour</button>
     </div>
 
     <div class="range-area">
-        <label>Gradient Mixing</label>
+        <label>Gradient mixing</label>
         <input type="range" id="mixSlider" min="0" max="100" value="50" oninput="handleUpdate()">
     </div>
 
-    <button class="mainBtn" onclick="generate()">Generate Rounded QR</button>
+    <div class="custom-options">
+        <label style="font-size:12px; opacity:0.7; margin-bottom: 5px; display:block;">Center Logo Text (1-3 chars):</label>
+        <input type="text" id="logoText" placeholder="SC" value="SC" maxlength="3" style="margin-bottom: 10px;">
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="circleToggle" checked style="width: 18px; height: 18px; accent-color: #38bdf8; cursor: pointer;">
+            <label for="circleToggle" style="font-size: 13px; cursor: pointer; color:#fff;">Add outer gradient circle</label>
+        </div>
+    </div>
+
+    <button class="mainBtn" onclick="generate()">Generate QR</button>
 
     <div id="qrWrap">
         <canvas id="qr"></canvas>
@@ -179,150 +257,193 @@ canvas#qr{
 
     <div id="actionArea" class="actions">
         <button class="btn-png" onclick="downloadPNG()">Download PNG</button>
-        <button class="btn-svg" onclick="downloadSVG()">Download SVG</button>
     </div>
 </div>
 
+<div class="ad-container">
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-app-pub-5947768435550039" data-ad-slot="8319142399" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script> (adsbygoogle = window.adsbygoogle || []).push({}); </script>
+</div>
+
 <script>
-// Initial Defaults matching the HTML values
-let primary = "#38bdf8";
-let secondary = "#6366f1";
-let generated = false;
+    let primary = "#38bdf8";
+    let secondary = "#6366f1";
+    let generated = false;
 
-// Initialize inputs with default colors
-const pickerP = document.getElementById('pickerPrimary');
-const pickerS = document.getElementById('pickerSecondary');
+    const pickerP = document.getElementById('pickerPrimary');
+    const pickerS = document.getElementById('pickerSecondary');
+    const logoTextInput = document.getElementById('logoText');
+    const circleToggle = document.getElementById('circleToggle');
 
-// --- Event Listeners for Color Changes ---
-// This ensures the color update logic runs whenever the input changes
-pickerP.addEventListener('input', (e) => {
-    primary = e.target.value;
-    updateSliderTrack();
-    if(generated) drawQR();
-});
+    function toggleSidebar() { document.getElementById('sidebarMenu').classList.toggle('open'); }
 
-pickerS.addEventListener('input', (e) => {
-    secondary = e.target.value;
-    updateSliderTrack();
-    if(generated) drawQR();
-});
-
-function updateSliderTrack() {
-    const slider = document.getElementById('mixSlider');
-    slider.style.background = `linear-gradient(90deg, ${primary}, ${secondary})`;
-}
-updateSliderTrack();
-
-// FIXED FUNCTION: Instead of creating a new input, click the existing hidden one
-function openPicker(type) {
-    if (type === 'p') {
-        pickerP.click();
-    } else {
-        pickerS.click();
+    // ये फंक्शन अब दूसरे पेज पर जाने के बजाय, तुम्हारी ऐप में ही विंडो (ओवरले) खोलेगा
+    function openPrivacyPolicyLink() {
+        toggleSidebar(); // साइडबार बंद करेगा
+        document.getElementById('privacyOverlay').style.display = 'flex'; // प्राइवेसी विंडो दिखाएगा
     }
-}
 
-function handleUpdate() {
-    if(generated) drawQR();
-}
-
-async function generate() {
-    let val = document.getElementById("text").value.trim();
-    if(!val) { alert("Please enter text first!"); return; }
-    generated = true;
-    document.getElementById("qrWrap").style.display = "block";
-    document.getElementById("actionArea").style.display = "flex";
-    await drawQR();
-}
-
-function roundedRect(ctx, x, y, width, height, radius) {
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.lineTo(x + width - radius, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-    ctx.lineTo(x + width, y + height - radius);
-    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-    ctx.lineTo(x + radius, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-    ctx.lineTo(x, y + radius);
-    ctx.quadraticCurveTo(x, y, x + radius, y);
-    ctx.closePath();
-}
-
-async function drawQR() {
-    let val = document.getElementById("text").value.trim();
-    const canvas = document.getElementById("qr");
-    const ctx = canvas.getContext("2d");
-
-    const qrCanvas = document.createElement('canvas');
-    const qrCtx = qrCanvas.getContext("2d");
-
-    try {
-        await QRCode.toCanvas(qrCanvas, val, { 
-            width: 800, 
-            margin: 2,
-            color: { dark: "#000000", light: "#00000000" }
-        });
-
-        const mix = document.getElementById("mixSlider").value / 100;
-        const grd = qrCtx.createLinearGradient(0, 0, qrCanvas.width, qrCanvas.height);
-        grd.addColorStop(0, primary);
-        grd.addColorStop(mix, secondary);
-        grd.addColorStop(1, secondary);
-
-        qrCtx.globalCompositeOperation = 'source-in';
-        qrCtx.fillStyle = grd;
-        qrCtx.fillRect(0, 0, qrCanvas.width, qrCanvas.height);
-        
-        canvas.width = qrCanvas.width;
-        canvas.height = qrCanvas.height;
-        
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const radius = 80;
-        roundedRect(ctx, 0, 0, canvas.width, canvas.height, radius);
-        ctx.clip(); 
-
-        ctx.fillStyle = "#FFFFFF"; 
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.drawImage(qrCanvas, 0, 0);
-
-    } catch (err) {
-        console.error(err);
+    // यह फंक्शन 'X' बटन दबाने पर चलेगा और विंडो को बंद कर देगा
+    function closePrivacyPolicy() {
+        document.getElementById('privacyOverlay').style.display = 'none'; // प्राइवेसी विंडो छिपा देगा
     }
-}
 
-function downloadPNG() {
-    const canvas = document.getElementById("qr");
-    const imgData = canvas.toDataURL("image/png");
-    
-    const link = document.createElement('a');
-    link.download = 'KR-Rounded-QR.png';
-    link.href = imgData;
-    link.click();
-}
+    // लाइव अपडेट्स के लिए
+    pickerP.addEventListener('input', (e) => { primary = e.target.value; updateSliderTrack(); if(generated) drawQR(); });
+    pickerS.addEventListener('input', (e) => { secondary = e.target.value; updateSliderTrack(); if(generated) drawQR(); });
+    logoTextInput.addEventListener('input', () => { if(generated) drawQR(); });
+    circleToggle.addEventListener('change', () => { if(generated) drawQR(); });
 
-function downloadSVG() {
-    const canvas = document.getElementById("qr");
-    const imgData = canvas.toDataURL("image/png");
-    
-    const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}">
-        <image href="${imgData}" width="100%" height="100%" x="0" y="0"/>
-    </svg>`;
-    
-    const blob = new Blob([svg], {type: 'image/svg+xml;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'KR-Rounded-QR.svg';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-}
+    function updateSliderTrack() {
+        document.getElementById('mixSlider').style.background = `linear-gradient(90deg, ${primary}, ${secondary})`;
+    }
+    updateSliderTrack();
+
+    function openPicker(type) { type === 'p' ? pickerP.click() : pickerS.click(); }
+    function handleUpdate() { if(generated) drawQR(); }
+
+    async function generate() {
+        let val = document.getElementById("text").value.trim();
+        if(!val) { alert("Please enter text first!"); return; }
+
+        generated = true;
+        document.getElementById("qrWrap").style.display = "block";
+        document.getElementById("actionArea").style.display = "flex";
+        await drawQR();
+    }
+
+    // ओरिजिनल Rounded Rect फंक्शन
+    function roundedRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath(); ctx.moveTo(x + radius, y); ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius); ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height); ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius); ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y); ctx.closePath();
+    }
+
+    async function drawQR() {
+        let val = document.getElementById("text").value.trim();
+        let centerText = document.getElementById("logoText").value.trim();
+        let isCircle = document.getElementById("circleToggle").checked;
+
+        const canvas = document.getElementById("qr");
+        const ctx = canvas.getContext("2d");
+
+        // एक्यूरेट और हाई क्वालिटी कैनवास
+        const canvasSize = 800;
+        canvas.width = canvasSize;
+        canvas.height = canvasSize;
+
+        const cx = canvasSize / 2;
+        const cy = canvasSize / 2;
+
+        // अगर सर्कल है तो QR थोड़ा छोटा होगा ताकि बॉर्डर अच्छे से दिखे
+        const qrSize = isCircle ? 550 : 750;
+
+        const qrCanvas = document.createElement('canvas');
+        const qrCtx = qrCanvas.getContext("2d");
+
+        try {
+            // QR Generate (Error Correction 'H' बहुत ज़रूरी है बीच के लोगो के लिए)
+            await QRCode.toCanvas(qrCanvas, val, {
+                width: qrSize,
+                margin: 2,
+                color: { dark: "#000000", light: "#00000000" }, // ट्रांसपेरेंट लाइट
+                errorCorrectionLevel: 'H'
+            });
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // अगर सर्कल नहीं है तो ओरिजिनल राउंडेड कॉर्नर वाला इफ़ेक्ट लगाएंगे
+            if(!isCircle) {
+                roundedRect(ctx, 0, 0, canvas.width, canvas.height, 80);
+                ctx.clip();
+            }
+
+            // 1. सफ़ेद बैकग्राउंड
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. गोल बाहरी बॉर्डर (सर्कल) ड्रा करना
+            if (isCircle) {
+                const circleRadius = 370;
+                ctx.beginPath();
+                ctx.arc(cx, cy, circleRadius, 0, Math.PI * 2);
+
+                const circleGrd = ctx.createLinearGradient(cx - circleRadius, cy - circleRadius, cx + circleRadius, cy + circleRadius);
+                circleGrd.addColorStop(0, primary);
+                circleGrd.addColorStop(1, secondary);
+
+                ctx.lineWidth = 25;
+                ctx.strokeStyle = circleGrd;
+                ctx.stroke();
+            }
+
+            // 3. मिक्स स्लाइडर के हिसाब से QR कोड पर कलर लगाना
+            const mix = document.getElementById("mixSlider").value / 100;
+            const qrGrd = qrCtx.createLinearGradient(0, 0, qrCanvas.width, qrCanvas.height);
+            qrGrd.addColorStop(0, primary);
+            qrGrd.addColorStop(mix, secondary);
+            qrGrd.addColorStop(1, secondary);
+
+            qrCtx.globalCompositeOperation = 'source-in';
+            qrCtx.fillStyle = qrGrd;
+            qrCtx.fillRect(0, 0, qrCanvas.width, qrCanvas.height);
+            qrCtx.globalCompositeOperation = 'source-over';
+
+            // 4. QR कोड को मेन कैनवास पर सेट करना
+            const qrX = cx - (qrSize / 2);
+            const qrY = cy - (qrSize / 2);
+            ctx.drawImage(qrCanvas, qrX, qrY);
+
+            // 5. बीच का लेटर (Logo) ड्रा करना
+            if (centerText) {
+                const fontSize = centerText.length > 1 ? 160 : 200;
+                ctx.font = `bold ${fontSize}px system-ui`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+
+                // आउटलाइन (मास्किंग) - ताकि QR कोड के डॉट्स इसके पीछे से छिप जाएं
+                ctx.lineWidth = 32;
+                ctx.strokeStyle = "#FFFFFF";
+                ctx.lineJoin = "round";
+                ctx.strokeText(centerText, cx, cy + 10);
+
+                // अंदर का ग्रेडिएंट और शैडो इफ़ेक्ट (फोटो जैसा)
+                const textGrd = ctx.createLinearGradient(cx - 100, cy - 100, cx + 100, cy + 100);
+                textGrd.addColorStop(0, primary);
+                textGrd.addColorStop(1, secondary);
+
+                ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
+                ctx.shadowBlur = 12;
+                ctx.shadowOffsetX = 4;
+                ctx.shadowOffsetY = 4;
+
+                ctx.fillStyle = textGrd;
+                ctx.fillText(centerText, cx, cy + 10);
+
+                ctx.shadowColor = "transparent"; // शैडो रीसेट
+            }
+
+        } catch (err) {
+            console.error(err);
+            alert("QR Code Generate करने में कोई समस्या हुई। कृपया टेक्स्ट जांचें।");
+        }
+    }
+
+    function downloadPNG() {
+        const canvas = document.getElementById("qr");
+        const imgData = canvas.toDataURL("image/png");
+
+        if (window.AndroidInterface) {
+            window.AndroidInterface.saveFile(imgData);
+        } else {
+            const link = document.createElement('a');
+            link.download = 'Swift-QR-Pro.png';
+            link.href = imgData;
+            link.click();
+        }
+    }
 </script>
 
 </body>
